@@ -1,0 +1,93 @@
+.books {
+  padding: 20px;
+
+  .book-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: rgb(0, 0, 0);
+    }
+  }
+
+  a {
+    @include edit-button;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  tr:hover {
+    background-color: #eaeaea;
+  }
+
+  form {
+    margin-block: 20px;
+
+    select,
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .genre-list {
+      position: relative;
+      //border: 1px solid red;
+    }
+
+    .add-genre {
+      @include edit-button;
+      position: absolute;
+      right: 0;
+      top: 0;
+      margin: 0;
+    }
+
+    .genres {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      border-radius: 4px;
+
+      h3 {
+        margin-right: 10px;
+      }
+    }
+
+    .confirm {
+      @include confirm-button;
+      min-width: 120px;
+    }
+
+    .cancel {
+      @include edit-button;
+      min-width: 120px;
+    }
+  }
+}

@@ -1,0 +1,107 @@
+.authors {
+  padding: 20px;
+
+  .author-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: rgb(0, 0, 0);
+    }
+  }
+
+   .add-date {
+    @include edit-button;
+   }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  tr:hover {
+    background-color: #eaeaea;
+  }
+
+  form {
+    margin-block: 20px;
+
+    select, input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    button {
+        min-width: 120px;
+    }
+
+    .confirm {
+      @include confirm-button;
+    }
+
+    .cancel {
+      @include edit-button;
+    }
+
+  }
+
+  .author-card {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 20px;
+
+    .author-info {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    img {
+      height: 140px;
+      width: 140px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .book-list {
+      margin-top: 20px;
+
+      ul {
+        list-style: none;
+        padding: 0;
+
+      }
+    }
+  }
+}
