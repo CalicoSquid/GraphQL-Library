@@ -1,3 +1,4 @@
 graphql-server
 graphql-frontend
 node_modules
+.env

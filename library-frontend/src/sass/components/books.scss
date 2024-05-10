@@ -15,7 +15,7 @@
     }
   }
 
-  a {
+  .add-book {
     @include edit-button;
   }
 
@@ -89,5 +89,26 @@
       @include edit-button;
       min-width: 120px;
     }
+  }
+}
+
+.book {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 20px;
+
+  h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: underline;
+
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.2rem;
+    
   }
 }

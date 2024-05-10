@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
-import { ADD_BIRTH, All_AUTHORS } from "../queries";
+import { ADD_BIRTH, ALL_AUTHORS, GET_AUTHOR } from "../queries";
 import { useNavigate } from "react-router-dom";
 
-export default function AddBirth() {
+export default function AddBirth({token}) {
   const [born, setBorn] = useState("");
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
@@ -12,13 +12,18 @@ export default function AddBirth() {
   const navigate = useNavigate();
 
   const [addBirth] = useMutation(ADD_BIRTH, {
-    refetchQueries: [{ query: All_AUTHORS }],
+    context: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    },
+    refetchQueries: [{ query: ALL_AUTHORS }, { query: GET_AUTHOR, variables: { name } }],
     onError: (error) => {
       console.log(error);
     },
   });
 
-  const result = useQuery(All_AUTHORS);
+  const result = useQuery(ALL_AUTHORS);
   const authors = result.data.allAuthors;
 
   const submit = (e) => {
@@ -31,9 +36,6 @@ export default function AddBirth() {
         img: image,
       },
     });
-    setName("");
-    setBorn("");
-    setImage("");
     navigate("/authors");
   };
 

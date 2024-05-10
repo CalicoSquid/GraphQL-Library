@@ -16,10 +16,21 @@ nav {
 
     ul {
         display: flex;
+        align-items: center;
         list-style: none;
 
         li {
             margin-left: 1rem;
+
+            a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            button {
+                @include confirm-button;
+            }
             
         }
     }

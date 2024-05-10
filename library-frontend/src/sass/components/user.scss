@@ -1,0 +1,24 @@
+
+.user {
+    padding: 20px;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    margin: 50px auto;
+
+    h2 {
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: rgb(0, 0, 0);
+
+    }
+
+    p {
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+
+    }
+
+}

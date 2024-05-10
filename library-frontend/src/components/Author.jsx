@@ -15,6 +15,10 @@ export default function Author() {
         return <div>loading...</div>
     }
 
+    if (!result.data) {
+      return <div>No such author</div>
+    }
+
     const author = result.data.getAuthor
     const bookList = author.booksByAuthor.map((b) => <li key={b.title}>{b.title}</li>)
 

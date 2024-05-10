@@ -1,98 +1,26 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
-const { v1: uuid } = require('uuid');
+const mongoose = require("mongoose");
+mongoose.set("strictQuery", false);
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
-let authors = [
-  {
-    name: "Robert Martin",
-    id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
-    born: 1952,
-    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Robert_C._Martin_surrounded_by_computers.jpg/1200px-Robert_C._Martin_surrounded_by_computers.jpg"
-  },
-  {
-    name: "Martin Fowler",
-    id: "afa5b6f0-344d-11e9-a414-719c6709cf3e",
-    born: 1963,
-    img: "https://www.thoughtworks.com/content/dam/thoughtworks/images/photography/thoughtworker-profile/leaders/pro_martin_fowler.jpg"
-  },
-  {
-    name: "Fyodor Dostoevsky",
-    id: "afa5b6f1-344d-11e9-a414-719c6709cf3e",
-    born: 1821,
-    img: "https://cdn.britannica.com/45/181345-050-189BA6B8/Fyodor-Dostoyevsky-1876.jpg"
-  },
-  {
-    name: "Joshua Kerievsky", // birthyear not known
-    id: "afa5b6f2-344d-11e9-a414-719c6709cf3e",
-    img: "https://m.media-amazon.com/images/S/amzn-author-media-prod/5m3disp59h6vjkkgdc2dcevkbr._SY600_.jpg"
+const Book = require("./models/book");
+const Author = require("./models/author");
+const User = require("./models/user");
+const { GraphQLError } = require("graphql");
 
-  },
-  {
-    name: "Sandi Metz", // birthyear not known
-    id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
-    img: "https://images.squarespace-cdn.com/content/v1/537c0374e4b0f52ed92942e6/1480365148650-52LL1P7FKOFDPFC55AXH/DSC_4019.jpg"
-  },
-];
-
-let books = [
-  {
-    title: "Clean Code",
-    published: 2008,
-    author: "Robert Martin",
-    id: "afa5b6f4-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring"],
-  },
-  {
-    title: "Agile software development",
-    published: 2002,
-    author: "Robert Martin",
-    id: "afa5b6f5-344d-11e9-a414-719c6709cf3e",
-    genres: ["agile", "patterns", "design", "refactoring"],
-  },
-  {
-    title: "Refactoring, edition 2",
-    published: 2018,
-    author: "Martin Fowler",
-    id: "afa5de00-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring"],
-  },
-  {
-    title: "Refactoring to patterns",
-    published: 2008,
-    author: "Joshua Kerievsky",
-    id: "afa5de01-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring", "patterns"],
-  },
-  {
-    title: "Practical Object-Oriented Design, An Agile Primer Using Ruby",
-    published: 2012,
-    author: "Sandi Metz",
-    id: "afa5de02-344d-11e9-a414-719c6709cf3e",
-    genres: ["refactoring", "design"],
-  },
-  {
-    title: "Crime and punishment",
-    published: 1866,
-    author: "Fyodor Dostoevsky",
-    id: "afa5de03-344d-11e9-a414-719c6709cf3e",
-    genres: ["classic", "crime"],
-  },
-  {
-    title: "The Demon ",
-    published: 1872,
-    author: "Fyodor Dostoevsky",
-    id: "afa5de04-344d-11e9-a414-719c6709cf3e",
-    genres: ["classic", "revolution"],
-  },
-];
-
+mongoose.connect(process.env.MONGODB_URI, {}).then(() => {
+  console.log("connected to MongoDB");
+});
 
 const typeDefs = `
 
 type Book {
     title: String!
     published: Int!
-    author: String!
+    author: Author
     genres: [String!]!
     id: ID!
 }
@@ -105,91 +33,281 @@ type Author {
     img: String
 }
 
+
+type User {
+    username: String!
+    favoriteGenre: String!
+    id: ID!
+}
+
+type Token {
+  value: String
+  user: User
+}
+
 type Query {
     bookCount: Int!
     authorCount: Int!
     allBooks(author: String, genre:String): [Book]!
     allAuthors: [Author]!
     getAuthor(name: String!): Author
+    getBook(title: String!): Book
+    getAllGenres: [String!]
+    me: User
 }
 
 type Mutation {
     addBook(title: String!, author: String!, published: Int!, genres: [String!]!): Book
     editAuthor(name: String!, setBornTo: Int!, img: String): Author
+    deleteBook(id: ID!): Boolean
+    deleteAllBooks: Boolean
+    deleteAllAuthors: Boolean
+    createUser(username: String!, password: String!, favoriteGenre: String!): User
+    login(username: String!, password: String!): Token
 }
 `;
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
-    allBooks: (root, args) => {
-      return books.filter(book => 
-        (!args.author || book.author === args.author) &&
-        (!args.genre || book.genres.includes(args.genre))
+    bookCount: async () => {
+      const books = await Book.find({});
+      return books.length;
+    },
+    authorCount: () => {
+      const authors = Author.find({});
+      return authors.length;
+    },
+    allBooks: async (root, args) => {
+      const books = await Book.find({}).populate("author");
+      return books;
+    },
+    allAuthors: async (root, args) => {
+      const authors = await Author.find({});
+      return authors;
+    },
+    getAuthor: async (root, args) => {
+      const author = await Author.findOne({ name: args.name }).populate(
+        "booksByAuthor"
       );
-    },
-    allAuthors: () => {
-      const authorList = authors.map((a) => {
-        const name = a.name;
-        const born = a.born;
-        const img = a.img;
-        const bookCount = books.filter((b) => b.author === a.name).length;
-        return { name, born, bookCount, img };
-      });
-      return authorList
-    },
-    getAuthor: (root, args) => {
-      const author = authors.find(a => a.name === args.name)
-      //console.log(author)
-      const bookCount = books.filter(b => b.author === args.name).length
-      const booksByAuthor = books.filter(b => b.author === args.name)
-      console.log(booksByAuthor)
-      if(!author) {
-        return null
+
+      if (!author) {
+        return null;
       }
 
-      const x = {...author, bookCount, booksByAuthor}
-      console.log(x)
+      const books = await author.booksByAuthor;
 
-      return x
+      const result = {
+        ...author.toObject(),
+        booksByAuthor: books,
+        bookCount: books.length,
+      };
+
+      return result;
     },
-    
+    getBook: async (root, args) => {
+      console.log(args.title);
+      const book = await Book.findOne({ title: args.title }).populate("author");
+      console.log(book);
+      if (!book) {
+        return null;
+      }
+      return book;
+    },
+    getAllGenres: async () => {
+      const books = await Book.find({});
+      const genres = books
+        .map((book) => book.genres)
+        .flat()
+        .filter((genre, index, array) => array.indexOf(genre) === index);
+      return genres;
+    }
   },
 
   Mutation: {
-    addBook: (root, args) => {
-      const existingAuthor = authors.find(a => a.name === args.author)
-
-      if(!existingAuthor) {
-        authors.push({name: args.author, born: null})
+    addBook: async (root, args, { currentUser }) => {
+      console.log("KKKKK", currentUser);
+      if (!currentUser) {
+        throw new GraphQLError("Unauthorized", {
+          extensions: {
+            code: "UNAUTHORIZED",
+          },
+        });
       }
-      const book = {...args, id: uuid()}
-      books.push(book)
-      return book
+
+      let author;
+      const existingAuthor = await Author.findOne({ name: args.author });
+      if (!existingAuthor) {
+        author = new Author({
+          name: args.author,
+          born: null,
+          img: null,
+          bookCount: 0,
+          booksByAuthor: [],
+        });
+        await author.save();
+      } else {
+        author = existingAuthor;
+      }
+
+      try {
+        const book = new Book({
+          ...args,
+          author: author._id,
+        });
+
+        const savedBook = await book.save();
+        author.booksByAuthor.push(savedBook._id);
+        author.bookCount = author.bookCount + 1;
+        await author.save();
+        await savedBook.populate("author");
+        return savedBook;
+      } catch (error) {
+        throw new GraphQLError("Saving book failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+            error: error.message,
+          },
+        });
+      }
     },
 
-    editAuthor: (root, args) => {
-      if(args.setBornTo) {
-        const authorToEdit = authors.find(a => a.name === args.name)
-        if(!authorToEdit) {
-          return null
-        }
-        authorToEdit.born = args.setBornTo
-        authorToEdit.img = args.img
-        return authorToEdit
+    deleteBook: async (root, args) => {
+      const deletedBook = await Book.findByIdAndDelete(args.id);
+      if (!deletedBook) {
+        return false;
       }
-    }
-  }
+      return true;
+    },
+
+    deleteAllBooks: async () => {
+      const deletedBooks = await Book.deleteMany({});
+      if (!deletedBooks) {
+        return false;
+      }
+      return true;
+    },
+
+    deleteAllAuthors: async () => {
+      const deletedAuthors = await Author.deleteMany({});
+      if (!deletedAuthors) {
+        return false;
+      }
+      return true;
+    },
+
+    editAuthor: async (root, args, { currentUser }) => {
+      if (!currentUser) {
+        throw new GraphQLError("Unauthorized", {
+          extensions: {
+            code: "UNAUTHORIZED",
+          },
+        });
+      }
+
+      if (args.setBornTo || args.img) {
+        try {
+          const authorToEdit = await Author.findOneAndUpdate(
+            { name: args.name },
+            { born: args.setBornTo, img: args.img },
+            { new: true }
+          );
+
+          if (!authorToEdit) {
+            return null;
+          }
+
+          return authorToEdit;
+        } catch (error) {
+          console.log(error);
+          throw new GraphQLError("Saving author failed", {
+            extensions: {
+              code: "BAD_USER_INPUT",
+              invalidArgs: args.name,
+            },
+          });
+        }
+      }
+    },
+
+
+
+    createUser: async (root, args) => {
+      console.log(args);
+      const existingUser = await User.findOne({ username: args.username });
+      if (existingUser) {
+        throw new GraphQLError("User already exists", {
+          extensions: {
+            code: "USER_ALREADY_EXISTS",
+          },
+        });
+      }
+
+      if (!args.password) {
+        throw new GraphQLError("Password is required", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.username,
+          },
+        });
+      }
+
+      const user = new User({
+        username: args.username,
+        password: await bcrypt.hash(args.password, 10),
+        favoriteGenre: args.favoriteGenre,
+      });
+      return user.save().catch((error) => {
+        throw new GraphQLError("Creating user failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.username,
+            error,
+          },
+        });
+      });
+    },
+    login: async (root, args) => {
+      console.log(args);
+      const user = await User.findOne({ username: args.username });
+      console.log(user);
+      if (!user) {
+        throw new GraphQLError("User not found", {
+          extensions: {
+            code: "USER_NOT_FOUND",
+          },
+        });
+      }
+      const valid = await bcrypt.compare(args.password, user.password);
+      if (!valid) {
+        throw new GraphQLError("Invalid password", {
+          extensions: {
+            code: "INVALID_PASSWORD",
+          },
+        });
+      }
+      const token = jwt.sign({ id: user._id }, process.env.SECRET);
+      return { value: token, user};
+    },
+  },
 };
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: true,
 });
 
 startStandaloneServer(server, {
   listen: { port: 4000 },
+  context: async ({ req, res }) => {
+    const auth = req ? req.headers.authorization : null;
+    if (auth && auth.startsWith("Bearer ")) {
+      const decodedToken = jwt.verify(auth.substring(7), process.env.SECRET);
+      const currentUser = await User.findById(decodedToken.id);
+      return { currentUser };
+    }
+  },
 }).then(({ url }) => {
   console.log(`Server ready at ${url}`);
 });

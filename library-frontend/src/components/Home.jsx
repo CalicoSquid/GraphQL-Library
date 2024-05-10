@@ -1,20 +1,28 @@
 import { Link } from "react-router-dom";
 import books from "../../public/books.jpeg";
 import { useQuery } from "@apollo/client";
-import { All_AUTHORS } from "../queries";
+import { ALL_AUTHORS } from "../queries";
 import avatar from "../../public/avatar.png";
 
 export default function Home() {
-  const result = useQuery(All_AUTHORS);
+  const result = useQuery(ALL_AUTHORS);
 
   if (result.loading) {
     return <div>loading...</div>;
   }
 
-  const featuredAuthor =
+  let featuredAuthor =
     result.data.allAuthors[
       Math.floor(Math.random() * result.data.allAuthors.length)
     ];
+
+  if (!featuredAuthor) {
+    featuredAuthor = {
+      name: "Unknown",
+      bookCount: 0,
+      img: avatar,
+    }
+  }
 
   return (
     <div className="home">
@@ -26,7 +34,7 @@ export default function Home() {
       </div>
 
       <div className="home-links">
-        <img src={books} alt="library" />
+        <img src={books} alt="library" className="hero"/>
         <div className="links">
           <div className="featured">
             <h3>Featured Author</h3>

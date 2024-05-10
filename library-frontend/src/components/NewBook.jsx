@@ -1,9 +1,10 @@
+/* eslint-disable react/prop-types */
 import { useMutation } from "@apollo/client";
 import { useState } from "react";
-import { ADD_BOOK, ALL_BOOKS, All_AUTHORS } from "../queries";
+import { ADD_BOOK, ALL_AUTHORS, ALL_BOOKS } from "../queries";
 import { useNavigate } from "react-router-dom";
 
-const NewBook = () => {
+const NewBook = ({ setError, token }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
@@ -12,16 +13,21 @@ const NewBook = () => {
   const navigate = useNavigate();
 
   const [addBook] = useMutation(ADD_BOOK, {
-    refetchQueries: [{ query: ALL_BOOKS }, { query: All_AUTHORS }],
+    context: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    },
+    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
     onError: (error) => {
-      console.log(error);
+      console.log("KKKKK", error);
     },
   });
 
   const submit = async (event) => {
     event.preventDefault();
 
-    addBook({
+    const book = await addBook({
       variables: {
         title,
         author,
@@ -30,17 +36,29 @@ const NewBook = () => {
       },
     });
 
-    setTitle("");
-    setPublished("");
-    setAuthor("");
-    setGenres([]);
-    setGenre("");
-    navigate("/books");
+    if (!book.data) {
+      handleErrors(book.errors);
+    } else {
+      setTitle("");
+      setPublished("");
+      setAuthor("");
+      setGenres([]);
+      setGenre("");
+      navigate("/books");
+    }
   };
 
   const addGenre = () => {
     setGenres(genres.concat(genre));
     setGenre("");
+  };
+
+  const handleErrors = (error) => {
+    console.log(error);
+    setError(error.message);
+    setTimeout(() => {
+      setError(null);
+    }, 5000);
   };
 
   return (
@@ -77,7 +95,9 @@ const NewBook = () => {
             Add genre
           </button>
         </div>
-        <div className="genres"><h3>Genres:</h3> {genres.join(" ")}</div>
+        <div className="genres">
+          <h3>Genres:</h3> {genres.join(" ")}
+        </div>
         <button type="submit" className="confirm">
           Create Book
         </button>

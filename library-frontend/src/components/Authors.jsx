@@ -1,10 +1,10 @@
 import { useQuery } from "@apollo/client";
-import { All_AUTHORS } from "../queries";
+import { ALL_AUTHORS } from "../queries";
 import { Link, Outlet } from "react-router-dom";
 
 /* eslint-disable react/prop-types */
 const Authors = () => {
-  const result = useQuery(All_AUTHORS);
+  const result = useQuery(ALL_AUTHORS);
 
   if (result.loading) {
     return <div>loading...</div>;
@@ -36,7 +36,6 @@ const Authors = () => {
     ))}
   </tbody>
 </table>
-      
       <Outlet />
     </div>
   );
