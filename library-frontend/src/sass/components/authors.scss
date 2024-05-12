@@ -53,6 +53,19 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       margin-bottom: 20px;
+
+      option {
+        font-size: 1.2rem;
+        color: rgb(0, 0, 0);
+      }
+
+      option:first-of-type {
+        margin-top: 10px;
+        color: gray;
+        &:disabled {
+          background-color: #f9f9f9;
+        }
+      }
     }
 
     button {

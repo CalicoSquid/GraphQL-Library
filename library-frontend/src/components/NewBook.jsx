@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useMutation } from "@apollo/client";
 import { useState } from "react";
-import { ADD_BOOK, ALL_AUTHORS, ALL_BOOKS } from "../queries";
+import { ADD_BOOK, GET_BOOKS_BY_GENRE } from "../queries";
 import { useNavigate } from "react-router-dom";
 
-const NewBook = ({ setError, token }) => {
+const NewBook = ({ setError, filter }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
@@ -13,14 +13,17 @@ const NewBook = ({ setError, token }) => {
   const navigate = useNavigate();
 
   const [addBook] = useMutation(ADD_BOOK, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    },
-    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
     onError: (error) => {
-      console.log("KKKKK", error);
+      console.log(error);
+    },
+    update: (cache, response) => {
+      cache.updateQuery({ query: GET_BOOKS_BY_GENRE, variables: { genre: filter } }, (data) => {
+        console.log(data);
+        return {
+          ...data,
+          getBooksByGenre: data.getBooksByGenre.concat(response.data.addBook),
+        };
+      })
     },
   });
 

@@ -1,25 +1,50 @@
 /* eslint-disable react/prop-types */
 import { useQuery } from "@apollo/client";
-import { ALL_BOOKS } from "../queries";
+import { GET_ALL_GENRES, GET_BOOKS_BY_GENRE, GET_USER } from "../queries";
 import { Link, Outlet } from "react-router-dom";
+import Filter from "./Filter";
 
-const Books = ({error}) => {
+const Books = ({ error, filter, setFilter }) => {
+  
 
-  const result = useQuery(ALL_BOOKS);
+  const { data: user } = useQuery(GET_USER);
+  const { data: genres } = useQuery(GET_ALL_GENRES);
 
-  if(result.loading) {
-   return <div>loading...</div>
- }
+  const {
+    data: books,
+    loading: bookLoading,
+    error: bookError,
+  } = useQuery(GET_BOOKS_BY_GENRE, { variables: { genre: filter } });
 
-  const books = result.data.allBooks;
+  const genreList = genres?.getAllGenres || [];
+  const currentUser = user?.me || null;
+  const filteredBooks = books?.getBooksByGenre || [];
+
+  if (bookLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (bookError) {
+    return <div>{bookError.message}</div>;
+  }
 
   return (
     <div className="books">
       <div className="book-head">
-      <h2>Books</h2>
-      <Link to="/books/add" className="add-book">Add Book</Link>
+        <h2>Books</h2>
+        <Filter
+          filter={filter}
+          setFilter={setFilter}
+          currentUser={currentUser}
+          genreList={genreList}
+        />
+        {currentUser && (
+          <Link to="/books/add" className="add-book">
+            Add Book
+          </Link>
+        )}
       </div>
-      
+
       <table>
         <tbody>
           <tr>
@@ -27,9 +52,11 @@ const Books = ({error}) => {
             <th>Author</th>
             <th>Published</th>
           </tr>
-          {books.map((a) => (
+          {filteredBooks.map((a) => (
             <tr key={a.title}>
-              <td><Link to={`/books/${a.title}`}>{a.title}</Link></td>
+              <td>
+                <Link to={`/books/${a.title}`}>{a.title}</Link>
+              </td>
               <td>{a.author.name}</td>
               <td>{a.published}</td>
             </tr>
@@ -39,7 +66,7 @@ const Books = ({error}) => {
       {error && <div className="error">{error}</div>}
       <Outlet />
     </div>
-  )
-}
+  );
+};
 
-export default Books
+export default Books;

@@ -1,16 +1,16 @@
 /* eslint-disable react/prop-types */
 import { useApolloClient } from "@apollo/client";
 import { Link, useNavigate } from "react-router-dom";
-export default function Nav({ user, setUser, setToken }) {
+export default function Nav({ user, setUser}) {
   const navigate = useNavigate();
   const client = useApolloClient();
   const handleLogout = () => {
     localStorage.clear();
     setUser(null);
-    setToken(null);
     client.resetStore();
     navigate("/login");
   };
+  
   return (
     <nav className="nav">
       <h1>Library</h1>

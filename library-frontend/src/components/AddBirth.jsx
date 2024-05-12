@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ADD_BIRTH, ALL_AUTHORS, GET_AUTHOR } from "../queries";
 import { useNavigate } from "react-router-dom";
 
-export default function AddBirth({token}) {
+export default function AddBirth() {
   const [born, setBorn] = useState("");
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
@@ -12,11 +12,6 @@ export default function AddBirth({token}) {
   const navigate = useNavigate();
 
   const [addBirth] = useMutation(ADD_BIRTH, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    },
     refetchQueries: [{ query: ALL_AUTHORS }, { query: GET_AUTHOR, variables: { name } }],
     onError: (error) => {
       console.log(error);
@@ -36,7 +31,7 @@ export default function AddBirth({token}) {
         img: image,
       },
     });
-    navigate("/authors");
+    navigate(`/authors/${name}`);
   };
 
   const selectList = authors.map((a) => <option key={a.name}>{a.name}</option>);
@@ -51,6 +46,7 @@ export default function AddBirth({token}) {
           value={name}
           onChange={({ target }) => setName(target.value)}
         >
+          <option value="" disabled>Select author</option>
           {selectList}
         </select>
       </div>

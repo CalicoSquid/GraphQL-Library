@@ -53,6 +53,7 @@ type Query {
     getAuthor(name: String!): Author
     getBook(title: String!): Book
     getAllGenres: [String!]
+    getBooksByGenre(genre: String!): [Book]
     me: User
 }
 
@@ -120,6 +121,17 @@ const resolvers = {
         .flat()
         .filter((genre, index, array) => array.indexOf(genre) === index);
       return genres;
+    },
+    getBooksByGenre: async (root, args) => {
+      if(args.genre === "all") {
+        const books = await Book.find({}).populate("author");
+        return books
+      }
+      const books = await Book.find({ genres: args.genre }).populate("author");
+      return books;
+    },
+    me: (root, args, context) => {
+      return context.currentUser;
     }
   },
 
