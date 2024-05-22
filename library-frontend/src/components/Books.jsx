@@ -5,16 +5,12 @@ import { Link, Outlet } from "react-router-dom";
 import Filter from "./Filter";
 
 const Books = ({ error, filter, setFilter }) => {
-  
-
   const { data: user } = useQuery(GET_USER);
   const { data: genres } = useQuery(GET_ALL_GENRES);
 
-  const {
-    data: books,
-    loading: bookLoading,
-    error: bookError,
-  } = useQuery(GET_BOOKS_BY_GENRE, { variables: { genre: filter } });
+  const { data: books, loading: bookLoading, error: bookError } = useQuery(GET_BOOKS_BY_GENRE, {
+    variables: { genre: filter },
+  });
 
   const genreList = genres?.getAllGenres || [];
   const currentUser = user?.me || null;
